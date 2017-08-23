@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>joyfulmantis - Functors, Applicatives, and Monads: You don't need to know theory to use them</title>
+    <link rel="stylesheet" type="text/css" href="../css/default.css" />
+    <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+    <link href="http://fonts.googleapis.com/css?family=Quattrocento" rel="stylesheet" type="text/css" />
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
+  </head>
+  <body>
+    <div id="header">
+      <div id="logo">
+        <a href="../">joyfulmantis</a>
+      </div>
+      <div id="navigation">
+        
+        <a href="../">home</a>
+        
+        
+        
+        <a href="../about.html">about</a>
+        
+        
+        
+        <a href="../projects.html">projects</a>
+        
+
+        
+        <a href="../contact.html">contact</a>
+        
+
+        
+        <a href="../archives.html">archives</a>
+        
+      </div>
+    </div>
+
+    <div id="content">
+      
+      <h1>Functors, Applicatives, and Monads: You don't need to know theory to use them</h1>
+      
+      <div class="info">
+    Posted on August 23, 2017
+    
+</div>
+
+<p>Figuring out how to use the common functional programming typeclassess is not as hard as you would think. The key here is not to start with understanding the category theory behind them, but rather first start with using their implementations in the standard datatypes. Eventually by using them throughout different datatypes you will be able to grasp the larger picture, without having to touch the slightest bit of category theory.</p>
+<p>What datatypes that implement any of Functors, Applicatives or Monads have in common is that they all have some data, usually polymorphic (aka it really could be <strong>any</strong> type of data) locked inside, and that data can’t be naively accessed. Functors, Applicatives, and Monads each define certain specific ways that that data can be accessed. Throughout this article I will use standard datatypes that are easy to reason about, and show how their implementations of the aforementioned three typeclasses pan out.</p>
+<p>One easy to reason about datatype in Haskell is the datatype <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> a</code>, in this case specified to be <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code>. This datatype can either be constructed as <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Just</span> <span class="dt">String</span></code>, which is simply a wrapper around a string or <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Nothing</span></code>, which doesn’t hold any value at all. With this in mind you can see that if we receive a <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> with no guarantees on whether or not it actually contains a string or not, there is no simple way to access the enclosed string. For example suppose there was a function</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">getInnerString ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+getInnerString (<span class="dt">Just</span> string) <span class="fu">=</span> string
+getInnerString (<span class="dt">Nothing</span>) <span class="fu">=</span> error <span class="st">&quot;system blowing up, activating emergency protocols...&quot;</span></code></pre></div>
+<p>and we gave it a <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Nothing</span></code>. In that case it would only have the option of crashing the program (with an error), and that is something we do not want to do.</p>
+<p>The most basic typeclass available to us is the Functor, and it provides us with the ability to apply a function to the value inside the datatype that implements the Functor without worrying about whether or not it is possible to unwrap it. The important function that is required to implement the Functor typeclass is</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">(&lt;$&gt;) ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</code></pre></div>
+<p>This may seem confusing, especially since haskellers like to use these sorts of symbol functions between the two arguments that they are applying to it, but specifying it to <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and renaming it to something pronounceable already helps to remove almost all of the confusion</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">map<span class="ot"> ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</code></pre></div>
+<p>Here instead of unwrapping Maybe and then applying a function to the unwrapped value, we instead provide Maybe with the function that we want to apply, and let it take care of the rest. One result of having Maybe apply the value is that the resulting value has never gotten unwrapped, and therefore we need not worry about wrapping it up again.</p>
+<p>Here are some examples of how this plays out</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">mapF <span class="fu">=</span> (<span class="fu">&lt;$&gt;</span>)
+
+<span class="ot">smellsBadF ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+smellsBadF who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
+
+<span class="ot">maybeJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesF <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quot;James&quot;</span>
+
+<span class="ot">maybeJohnF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJohnF <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">maybeStinkyJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeStinkyJamesF <span class="fu">=</span> mapF smellsBadF maybeJamesF
+<span class="co">-- &gt; maybeStinkyJamesF </span>
+<span class="co">--   Just &quot;James smells awful&quot;</span>
+
+<span class="ot">maybeStinkyJohnF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeStinkyJohnF <span class="fu">=</span> mapF smellsBadF maybeJohnF
+<span class="co">-- &gt; maybeStinkyJohnF</span>
+<span class="co">--   Nothing</span></code></pre></div>
+<p>You may have used this even if you have never seen a ‘functional language’ before. It is exactly the same as the map function several languages use over a linked list. If you think of it, it makes sense that linked lists also implements the Functor typeclass. After all it is also a container that includes data, but whose data is also not easily accessible. For example, even if we assume the head of the list is all the so contained data, we can’t even be sure that the list we are getting has a head, or instead is an empty list</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">mapF <span class="fu">=</span> (<span class="fu">&lt;$&gt;</span>)
+
+<span class="ot">smellsBadF ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+smellsBadF who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
+
+<span class="ot">peopleF ::</span> [<span class="dt">String</span>]
+peopleF <span class="fu">=</span> [<span class="st">&quot;Fred&quot;</span>, <span class="st">&quot;Sandra&quot;</span>, <span class="st">&quot;Bill&quot;</span>]
+
+<span class="ot">ghostsF ::</span> [<span class="dt">String</span>]
+ghostsF <span class="fu">=</span> []
+
+<span class="ot">stinkyPeopleF ::</span> [<span class="dt">String</span>]
+stinkyPeopleF <span class="fu">=</span> mapF smellsBadF peopleF
+<span class="co">-- &gt; stinkyPeopleF</span>
+<span class="co">--   [&quot;Fred smells awful&quot;, &quot;Sandra smells awful&quot;, &quot;Bill smells awful&quot;]</span>
+
+<span class="ot">stinkyGhostsF ::</span> [<span class="dt">String</span>]
+stinkyGhostsF <span class="fu">=</span> mapF smellsBadF ghostsF
+<span class="co">-- &gt; stinkyGhostsF</span>
+<span class="co">--   []</span></code></pre></div>
+<p>Above using the Functor typeclass, we have discovered that even though it has a scary name, it’s bark is certainly bigger than it’s bite. We shall find below that learning the Functor typeclass was not a singular exception, but rather a general rule.</p>
+<p>The next typeclass we shall tackle is the Applicative typeclass. Again any datatypes that implement the Applicative typeclass usually contains enclosed data that is hard to easily access. Another thing to keep in mind, is that any datatype that implements the Applicative typeclass also implements the Functor typeclass. The two functions that are required to implement the Applicative typeclass are</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">pure<span class="ot"> ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> f a
+
+<span class="co">--and</span>
+
+<span class="ot">(&lt;*&gt;) ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> f (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</code></pre></div>
+<p>Again this looks more complicated then it really is, but that’s just because it is using symbols and is generic across all datatypes that implement the Applicative typeclass. If we specify to <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and change the function names, it quickly becomes much easier to reason about.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">wrap ::</span> a <span class="ot">-&gt;</span> <span class="dt">Mabye</span> a
+
+<span class="ot">apply ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</code></pre></div>
+<p>For the wrap function there is really almost nothing to it. It takes a value and encloses it in the datatype that implements the Applicative typeclass. For example looking back at our maybeJames function from above we can change it just so</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapA <span class="fu">=</span> pure
+
+<span class="co">-- the orginal function</span>
+<span class="ot">maybeJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesF <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quot;James&quot;</span>
+<span class="co">-- &gt; maybeJamesF</span>
+<span class="co">--   Just &quot;James&quot;</span>
+
+<span class="co">-- and now using the Applicative typeclass</span>
+<span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesA <span class="fu">=</span> wrapA <span class="st">&quot;James&quot;</span>
+<span class="co">-- &gt; maybeJamesF</span>
+<span class="co">--   Just &quot;James&quot;</span>
+<span class="co">-- &gt; maybeJamesA == maybeJamesF</span>
+<span class="co">--   True</span></code></pre></div>
+<p>The apply function is equally easy to wrap your mind around. It is also much more powerful than the mapping function from before, because whereas the map function can only apply a function to operate on the datatype’s inner value, the apply function (paired with the wrap function) can not only be used the same way, but can also be used to compose multiple wrapped values together. To see this in action we will first take the example that we worked on with the Functor typeclass and use functions from the Applicative typeclass instead.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapA <span class="fu">=</span> pure
+applyA <span class="fu">=</span> (<span class="fu">&lt;*&gt;</span>)
+
+<span class="ot">smellsBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+smellsBadA who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
+
+<span class="ot">maybeSmellsBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
+maybeSmellsBadA <span class="fu">=</span> wrapA smellsBadA
+
+<span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesA <span class="fu">=</span> wrapA <span class="st">&quot;James&quot;</span>
+
+<span class="ot">maybeJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJohnA <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">maybeStinkyJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeStinkyJamesA <span class="fu">=</span> applyA maybeSmellsBadA maybeJamesA
+<span class="co">-- &gt; maybeStinkyJamesA</span>
+<span class="co">--   Just &quot;James smells awful&quot;</span>
+
+<span class="ot">maybeStinkyJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeStinkyJohnA <span class="fu">=</span> applyA maybeSmellsBadA maybeJohnA
+<span class="co">-- &gt; maybeStinkyJohnA</span>
+<span class="co">--   Nothing</span></code></pre></div>
+<p>And then we will spice it up a little by still using some of the function from above, but now also using the apply function to compose two Maybe values.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapA <span class="fu">=</span> pure
+applyA <span class="fu">=</span> (<span class="fu">&lt;*&gt;</span>)
+
+<span class="ot">smellsBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+smellsBadA who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
+
+<span class="ot">maybeFredA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeFredA <span class="fu">=</span> wrapA <span class="st">&quot;Fred&quot;</span>
+
+<span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesA <span class="fu">=</span> wrapA <span class="st">&quot;James&quot;</span>
+
+<span class="ot">maybeJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJohnA <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">bothSmellBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+bothSmellBadA who1 who2 <span class="fu">=</span> 
+  (smellsBadA who1) <span class="fu">++</span> <span class="st">&quot;, but &quot;</span> <span class="fu">++</span> (smellsBadA who2) <span class="fu">++</span> <span class="st">&quot; too!&quot;</span>
+
+<span class="ot">maybeBothSmellBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
+maybeBothSmellBadA <span class="fu">=</span> wrapA bothSmellBadA
+
+<span class="ot">maybeJamesFredBothSmellA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesFredBothSmellA <span class="fu">=</span> applyA (applyA maybeBothSmellBadA maybeJamesA) maybeFredA
+<span class="co">-- &gt; maybeJamesFredBothSmellA</span>
+<span class="co">--   Just &quot;James smells awful, but Fred smells awful too!&quot;</span>
+
+<span class="ot">maybeJamesJohnBothSmellA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesJohnBothSmellA <span class="fu">=</span> applyA (applyA maybeBothSmellBadA maybeJamesA) maybeJohnA
+<span class="co">-- &gt; maybeJamesJohnBothSmellA</span>
+<span class="co">--   Nothing</span></code></pre></div>
+<p>How come we can apply only one wrapped function to two different wrapped values? The key here is that Haskell uses currying, so a function that takes two arguments, is in fact the same as a function that takes one argument and returns as a a value another function that also takes a value and then that finally returns the actual result. To see it in types</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">maybeBothSmellBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>))
+<span class="co">-- this is the same as Maybe (String -&gt; String -&gt; String) but the parens are</span>
+<span class="co">-- added to increase understanding</span>
+
+<span class="ot">applyA1st ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
+applyA1st <span class="fu">=</span> applyA
+
+<span class="ot">maybeJamesFredBothSmellA1st ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
+maybeJamesFredBothSmellA1st <span class="fu">=</span> apply1st maybeBothSmellBadA maybeJamesA
+
+<span class="ot">applyA2cnd ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+applyA2cnd <span class="fu">=</span> applyA
+
+<span class="ot">maybeJamesFredBothSmellA2cnd ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesFredBothSmellA2cnd <span class="fu">=</span> apply2cnd maybeJamesFredBothSmell1st maybeFredA</code></pre></div>
+<p>Another way to see the power of Applicative’s apply function is to use <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Control.Monad.Writer</span></code>. It is a datatype that allows us to have a value that comes with an accompanying log. When the writer’s are composed, the logs are composed (by appending) for free too.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad.Writer</span>
+
+applyA <span class="fu">=</span> (<span class="fu">&lt;*&gt;</span>)
+wrapA <span class="fu">=</span> pure
+
+<span class="ot">jamesWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span>
+jamesWriterA <span class="fu">=</span> writer (<span class="st">&quot;James&quot;</span>, [<span class="st">&quot;Creating Person: James&quot;</span>])
+
+<span class="ot">fredWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span>
+fredWriterA <span class="fu">=</span> writer (<span class="st">&quot;Fred&quot;</span>, [<span class="st">&quot;Creating Person: Fred&quot;</span>])
+
+<span class="ot">theyHateA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+theyHateA person1 person2 <span class="fu">=</span> person1 <span class="fu">++</span> <span class="st">&quot; hates &quot;</span> <span class="fu">++</span> person2
+
+<span class="ot">theyHateWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
+theyHateWriterA <span class="fu">=</span> wrapA theyHateA
+
+<span class="ot">jamesHatesFredWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span>
+jamesHatesFredWriterA <span class="fu">=</span> applyA (applyA theyHateWriterA jamesWriterA) fredWriterA
+<span class="co">-- &gt; runWriter jamesHatesFredWriterA</span>
+<span class="co">--   (&quot;James hates Fred&quot;,[&quot;Creating Person: James&quot;,&quot;Creating Person: Fred&quot;])</span></code></pre></div>
+<p>And that’s already most of it. The final typeclass we want to talk about is the “dreaded” Monad. But just as the Applicative and Functor typeclasses are not that hard, the Monad typeclass is not substantively harder to understand than they were either. Just like all datatypes that implement the Applicative typeclass also implement the Functor typeclass, so all datatypes that implement the Monad typeclass also implement the Applicative typeclass (and therefore the Functor typeclass too).</p>
+<p>There is only one<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> new function that needs to be declared to implement the Monad typeclass.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">(=&lt;&lt;) ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m a <span class="ot">-&gt;</span> m b</code></pre></div>
+<p>Again, scarier than it actually is, since it’s all symbols, and is generic for any Monad. Desymbolizing it, specifying it for <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and giving it a pronounceable name gives us</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">bind ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b) <span class="ot">-&gt;</span> <span class="dt">Mabye</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</code></pre></div>
+<p>Re-implementing what we just did with Functor and then Applicative in Monad is not too hard to manage.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapM <span class="fu">=</span> return 
+<span class="co">-- pure in the Applicative typeclass is called return, groovy right?</span>
+bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
+
+<span class="ot">smellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+smellsBadM who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
+
+<span class="co">--instead of wrapping the whole function like with the applicative version we </span>
+<span class="co">--path the argument through and then wrap the result</span>
+<span class="ot">maybeSmellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeSmellsBadM who <span class="fu">=</span> wrapM (smellsBadM who)
+
+<span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesM <span class="fu">=</span> wrapM <span class="st">&quot;James&quot;</span>
+
+<span class="ot">maybeJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJohnM <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">maybeStinkyJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeStinkyJamesM <span class="fu">=</span> bindM maybeSmellsBadM maybeJamesM
+<span class="co">-- &gt; maybeStinkyJamesM</span>
+<span class="co">--   Just &quot;James smells awful&quot;</span>
+
+<span class="ot">maybeStinkyJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeStinkyJohnM <span class="fu">=</span> bindM maybeSmellsBadM maybeJohnM
+<span class="co">-- &gt; maybeStinkyJohnM</span>
+<span class="co">--   Nothing</span></code></pre></div>
+<p>With a little bit of work we can get our composing values example from earlier working with the functions available from the Monad typeclass too</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
+wrapM <span class="fu">=</span> return
+
+<span class="ot">smellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+smellsBadM who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
+
+<span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesM <span class="fu">=</span> wrapM <span class="st">&quot;James&quot;</span>
+
+<span class="ot">maybeFredM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeFredM <span class="fu">=</span> wrapM <span class="st">&quot;Fred&quot;</span>
+
+<span class="ot">maybeJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJohnM <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">maybeBothSmellBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeBothSmellBadM who1 who2 <span class="fu">=</span> 
+  wrapM ((smellsBadM who1) <span class="fu">++</span> <span class="st">&quot;, but &quot;</span> <span class="fu">++</span> (smellsBadM who2) <span class="fu">++</span> <span class="st">&quot; too!&quot;</span>)
+
+<span class="ot">maybeBothSmellBadM2 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeBothSmellBadM2 who2 who1 <span class="fu">=</span> bindM (maybeBothSmellBadM who1) who2
+
+<span class="ot">maybeJamesFredBothSmellM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesFredBothSmellM <span class="fu">=</span> bindM (maybeBothSmellBadM2 maybeJamesM) maybeFredM
+<span class="co">-- &gt; maybeJamesFredBothSmellM</span>
+<span class="co">--   Just &quot;Fred smells awful, but James smells awful too!&quot;</span>
+
+<span class="ot">maybeJamesJohnBothSmellM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesJohnBothSmellM <span class="fu">=</span> bindM (maybeBothSmellBadM2 maybeJamesM) maybeJohnM
+<span class="co">-- &gt; maybeJamesJohnBothSmellM</span>
+<span class="co">--   Nothing</span></code></pre></div>
+<p>Notice that in this example the ordering is opposite from what we found from using Applicative’s apply. With apply we have two Maybe values, one of which is a function, and compose them together going left to right. With Monad’s bind, this is no longer the case, but rather we have a function that takes the unwrapped value from the second Maybe value and returns another Maybe value from it, therefore making the order right to left.</p>
+<p>With the move from the Functor typeclass to the Applicative typeclass we moved from being able to modify the value wrapped inside the Functor to the ability to compose different separately wrapped elements in a Applicative together, so when we make the jump from Applicative to Monad, what new ability do we get? From comparing the types between bind and apply we can see that for the first time we no longer have our functions resulting value prewrapped for us. This comes in useful if the function we want to apply to the unwrapped value, itself already produces a wrapped value. If we had that scenario with only an Applicative we would have no way to avoid nesting. In fact one cool benefit of Monad’s bind is that if we are given an already nested structure (for example if apply was used when bind should have been used), we can flatten it by just using the bind and identity functions.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
+wrapM <span class="fu">=</span> return
+
+<span class="ot">identityM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+identityM value <span class="fu">=</span> value
+
+<span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+maybeJamesM <span class="fu">=</span> wrapM <span class="st">&quot;James&quot;</span>
+
+<span class="ot">nestedMaybeJamesM ::</span> <span class="dt">Maybe</span> (<span class="dt">Maybe</span> <span class="dt">String</span>)
+nestedMaybeJamesM <span class="fu">=</span> wrapM maybeJamesM
+
+<span class="ot">unNestedMaybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+unNestedMaybeJamesM <span class="fu">=</span> bindM identityM nestedMaybeJamesM
+<span class="co">-- &gt; unNestedMaybeJamesM</span>
+<span class="co">--   Just &quot;James&quot;</span>
+<span class="co">-- &gt; unNestedMaybeJamesM == maybeJamesM</span>
+<span class="co">--   True</span></code></pre></div>
+<p>A practical use of this again shows up when using linked lists, bind even appears for this purpose in some other languages under the guise of flatMap, a function identical to bind specified to Lists. For example suppose I wanted to map a function over a list of values, but instead of just returning one value for each, I want to return several. One option to take care of this problem is to return a lists of lists, but this quickly becomes cumbersome when going several levels deep. Instead I can use Monad’s bind to accumulate all the results in one (non-nested) list. Here we use bind to generate <a href="https://en.wikipedia.org/wiki/Backronym">backronyms</a></p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.List</span>
+<span class="kw">import </span><span class="dt">Data.Char</span>
+
+bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
+
+<span class="co">-- Using a List for convenience for my (very short) word dictonary </span>
+<span class="ot">wordDictonaryM ::</span> [<span class="dt">String</span>]
+wordDictonaryM <span class="fu">=</span> [<span class="st">&quot;Resistance&quot;</span>, <span class="st">&quot;External&quot;</span>, <span class="st">&quot;Frog-legs&quot;</span>, <span class="st">&quot;Combined&quot;</span>, <span class="st">&quot;Load-&quot;</span>, 
+                 <span class="st">&quot;Understated&quot;</span>, <span class="st">&quot;Bearing&quot;</span>, <span class="st">&quot;Operational&quot;</span>, <span class="st">&quot;Treadmill&quot;</span>]
+
+<span class="co">-- String is just a List of Char [Char]</span>
+<span class="ot">backronymM ::</span> <span class="dt">String</span>
+<span class="co">-- Stephen </span>
+backronymM <span class="fu">=</span> <span class="st">&quot;Colbert&quot;</span>
+
+<span class="ot">findWordM ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+<span class="co">-- Don't let the anonymous function scare you. They are functions that don't have</span>
+<span class="co">-- any name -- which makes them useful when they are short, and you only need to </span>
+<span class="co">-- use them once. In this case this anonymous function only has one argument &quot;x&quot;</span>
+findWordM c <span class="fu">=</span> <span class="kw">case</span> find (\x <span class="ot">-&gt;</span> head x <span class="fu">==</span> toUpper c) wordDictonaryM <span class="kw">of</span>
+               <span class="dt">Just</span> x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot; &quot;</span>
+               <span class="dt">Nothing</span> <span class="ot">-&gt;</span> c <span class="fu">:</span> <span class="st">&quot; &quot;</span>
+
+<span class="ot">aTreadmillM ::</span> <span class="dt">String</span>
+aTreadmillM <span class="fu">=</span> bindM findWordM backronymM
+<span class="co">-- &gt; aTreadmillM</span>
+<span class="co">-- &quot;Combined Operational Load- Bearing External Resistance Treadmill &quot;</span></code></pre></div>
+<p>And that’s really all there is too these scary typeclasses. Just like in Java where you have some Objects where it’s not possible to directly change the inner state, in Haskell you have some datatypes that also don’t allow directly changing their inner variable(s). Just like in Java where if we know what class the Object inherits from we can use certain generic functions on them, in Haskell we have typeclasses, and if a datatype implements a certain typeclass, we can be sure there will be certain functions that will work on it.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Two functions, but only one new one. The other one (return) is simply an alias to our previously mentioned wrap (aka pure)<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+
+
+
+    </div>
+    <div id="footer">
+      <div id="proud"> Site proudly generated by
+      <a href="http://jaspervdj.be/hakyll">Hakyll</a></div>
+    </div>
+  </body>
+</html>
