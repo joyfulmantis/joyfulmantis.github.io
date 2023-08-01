@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>joyfulmantis - Hacking HLS: My Summer of Haskell Journey</title>
+    <link rel="stylesheet" type="text/css" href="../css/default.css" />
+    <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+    <link href="http://fonts.googleapis.com/css?family=Quattrocento" rel="stylesheet" type="text/css" />
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet" />
+    <link rel="alternate" type="application/atom+xml" title="Blog" href="../atom.xml" />
+
+  </head>
+  <body>
+    <div id="header">
+      <div id="logo">
+        <a href="../">joyfulmantis</a>
+      </div>
+      <div id="navigation">
+        
+        <a href="../">home</a>
+        
+        
+        
+        <a href="../about.html">about</a>
+        
+        
+        
+        <a href="../projects.html">projects</a>
+        
+
+        
+        <a href="../contact.html">contact</a>
+        
+
+        
+        <a href="../archives.html">archives</a>
+        
+      </div>
+    </div>
+
+    <div id="content">
+      
+      <h1>Hacking HLS: My Summer of Haskell Journey</h1>
+      
+      <div class="info">
+        Posted on August  1, 2023
+        
+      </div>
+      
+      
+      <!-- <div class="info"> -->
+<!--     Posted on August  1, 2023 -->
+<!--      -->
+<!-- </div> -->
+
+
+
+<p>It’s been almost 6 years since I last posted here. Since then I have finished my bachelors in TCSOL and tried my hand at teaching. Although enjoyable, I could never quite leave the siren call of programming behind me. There is something special about designing and implementing a solution to a problem. Managing a classroom of 40 something tweenagers is special too – but a different kind of special.</p>
+<p>Last year I started to brush up my programming skills, and at the beginning of this year I applied to the Summer of Haskell. Previously, Google Summer of Code, which the Summer of Haskell is based off of, was only open to students. However, as of 2022 they now accept any applicant new to open source, so for someone like me who is transitioning to programming it was a perfect fit.</p>
+<p>Most projects recommend you start off with making a small change in the codebase before applying to make sure you have the basics down. HLS specifically lists issues that are considered easy, so I picked one for writing a plugin to convert record selectors to record dot syntax. Not knowing any of the codebase, it was a bit of work to understand how things work in HLS land, but with the help of <a href="https://www.tweag.io/blog/2023-01-31-hls-internship-report/">Berk Ozkutuk’s blogpost</a> and his “explicit-records”, I was able to write and ship my plugin.</p>
+<figure>
+<img src="https://raw.githubusercontent.com/haskell/haskell-language-server/master/plugins/hls-overloaded-record-dot-plugin/example.gif" alt="The overloaded record dot plugin" />
+<figcaption aria-hidden="true">The overloaded record dot plugin</figcaption>
+</figure>
+<p>The project I applied for was implementing resolve support in HLS. Resolve support allows us to delay part of the computational work we need to do to offer code lenses, code actions, and completions to later. Not knowing the difficulty of the project I conservatively estimated I would be able to implement resolve in 6 plugins in addition to general resolve support in core HLS.</p>
+<p>Ever since starting working on the codebase in the beginning of June I’ve been busy moving from one PR to the next. It’s been hectic at times, but I am happy to have been able to make more progress than I had expected. Micheal had earlier <a href="https://github.com/haskell/lsp/pull/478">rewritten the haskell lsp-types package</a> to be generated from the specification. That was really a huge boon for anyone implementing any new LSP feature (including for me with my resolve support), since now all the types were already there. However, HLS didn’t support the new package, so <a href="https://github.com/haskell/haskell-language-server/pull/3621">implementing that support</a> was my first task. It was difficult, but also very instructive as I made my way throughout the whole HLS codebase replacing the types that had changed with their new equivalents</p>
+<p>I then went and implemented resolve for the <a href="https://github.com/haskell/haskell-language-server/pull/3658">overload-record-dot</a>, <a href="https://github.com/haskell/haskell-language-server/pull/3679">hlint</a> <a href="https://github.com/haskell/haskell-language-server/pull/3682">explicit-imports</a>, and <a href="https://github.com/haskell/haskell-language-server/pull/3729">refine-imports</a> plugins. After that I did some <a href="https://github.com/haskell/haskell-language-server/pull/3688">general refactoring to how resolve is implemented in HLS</a>, giving some nice quality of life improvements, such as always providing the URI to the handler, and decoding the handlers arguments from JSON before passing it to the handler.</p>
+<p>What I have worked on most recently is plugin error handling. HLS previously had plugins return a response error that was then sent on to the HLS client. However this approach had some problems. One of them was we usually sent a request to multiple plugins, and if they all returned errors we would just send back a generic error instead of combining them. We also logged everything the same way which was confusing for users and a bit noisy for anyone wanting to debug HLS.</p>
+<p><a href="https://github.com/haskell/haskell-language-server/pull/3659">Fendor had done a bunch of work</a> improving how we deal with errors, including some nice ExceptT helper functions that let us fail in predefined ways for some common things we do. As he didn’t have time to finish it, <a href="https://github.com/haskell/haskell-language-server/pull/3717">I took it on</a> and then implemented the PluginError type through the core HLS plugin handling code. With that change, it is now much easier for plugins to provide more discrete errors, which then allows us to choose which error to return to the client based on severity, and log serious errors in plugins differently from failures due to parse errors in the user code among other benefits.</p>
+<p>While implementing these features I have also had the opportunity to fix some bugs I have encountered along the way, like <a href="https://github.com/haskell/haskell-language-server/pull/3674">fixing the pragma plugin causing incorrect code actions</a>, and <a href="https://github.com/haskell/haskell-language-server/pull/3696">keeping exceptions in commands from taking down the whole server</a>.</p>
+<p>My Summer of Haskell is only a bit more than halfway through, so I hope to keep hacking on the codebase, adding resolve support to more plugins, squashing more bugs, and finding other ways I can improve the codebase. For giving me this opportunity to spend my summer working on HLS I would like to thank my mentor Micheal, the HLS team, the Haskell Foundation, and everyone else who has contributed to the Haskell community.</p>
+
+
+
+    </div>
+    <div id="footer">
+      <div id="proud"> Site proudly generated by
+      <a href="http://jaspervdj.be/hakyll">Hakyll</a></div>
+    </div>
+  </body>
+</html>

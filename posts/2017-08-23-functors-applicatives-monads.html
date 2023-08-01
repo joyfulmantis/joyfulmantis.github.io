@@ -63,300 +63,300 @@
 
 <p>Figuring out how to use the common functional programming typeclassess is not as hard as you would think. The key here is not to start with understanding the category theory behind them, but rather first start with using their implementations in the standard datatypes. Eventually by using them throughout different datatypes you will be able to grasp the larger picture, without having to touch the slightest bit of category theory.</p>
 <p>What datatypes that implement any of Functors, Applicatives or Monads have in common is that they all have some data, usually polymorphic (aka it really could be <strong>any</strong> type of data) locked inside, and that data can’t be naively accessed. Functors, Applicatives, and Monads each define certain specific ways that that data can be accessed. Throughout this article I will use standard datatypes that are easy to reason about, and show how their implementations of the aforementioned three typeclasses pan out.</p>
-<p>One easy to reason about datatype in Haskell is the datatype <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> a</code>, in this case specified to be <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code>. This datatype can either be constructed as <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Just</span> <span class="dt">String</span></code>, which is simply a wrapper around a string or <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Nothing</span></code>, which doesn’t hold any value at all. With this in mind you can see that if we receive a <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> with no guarantees on whether or not it actually contains a string or not, there is no simple way to access the enclosed string. For example suppose there was a function</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">getInnerString ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-getInnerString (<span class="dt">Just</span> string) <span class="fu">=</span> string
-getInnerString (<span class="dt">Nothing</span>) <span class="fu">=</span> error <span class="st">&quot;system blowing up, activating emergency protocols...&quot;</span></code></pre></div>
-<p>and we gave it a <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Nothing</span></code>. In that case it would only have the option of crashing the program (with an error), and that is something we do not want to do.</p>
+<p>One easy to reason about datatype in Haskell is the datatype <code class="sourceCode haskell"><span class="dt">Maybe</span> a</code>, in this case specified to be <code class="sourceCode haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code>. This datatype can either be constructed as <code class="sourceCode haskell"><span class="dt">Just</span> <span class="dt">String</span></code>, which is simply a wrapper around a string or <code class="sourceCode haskell"><span class="dt">Nothing</span></code>, which doesn’t hold any value at all. With this in mind you can see that if we receive a <code class="sourceCode haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> with no guarantees on whether or not it actually contains a string or not, there is no simple way to access the enclosed string. For example suppose there was a function</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">getInnerString ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>getInnerString (<span class="dt">Just</span> string) <span class="ot">=</span> string</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>getInnerString (<span class="dt">Nothing</span>) <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;system blowing up, activating emergency protocols...&quot;</span></span></code></pre></div>
+<p>and we gave it a <code class="sourceCode haskell"><span class="dt">Nothing</span></code>. In that case it would only have the option of crashing the program (with an error), and that is something we do not want to do.</p>
 <p>The most basic typeclass available to us is the Functor, and it provides us with the ability to apply a function to the value inside the datatype that implements the Functor without worrying about whether or not it is possible to unwrap it. The important function that is required to implement the Functor typeclass is</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">(&lt;$&gt;) ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</code></pre></div>
-<p>This may seem confusing, especially since haskellers like to use these sorts of symbol functions between the two arguments that they are applying to it, but specifying it to <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and renaming it to something pronounceable already helps to remove almost all of the confusion</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">map<span class="ot"> ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(&lt;$&gt;) ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span></code></pre></div>
+<p>This may seem confusing, especially since haskellers like to use these sorts of symbol functions between the two arguments that they are applying to it, but specifying it to <code class="sourceCode haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and renaming it to something pronounceable already helps to remove almost all of the confusion</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span><span class="ot"> ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</span></code></pre></div>
 <p>Here instead of unwrapping Maybe and then applying a function to the unwrapped value, we instead provide Maybe with the function that we want to apply, and let it take care of the rest. One result of having Maybe apply the value is that the resulting value has never gotten unwrapped, and therefore we need not worry about wrapping it up again.</p>
 <p>Here are some examples of how this plays out</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">mapF <span class="fu">=</span> (<span class="fu">&lt;$&gt;</span>)
-
-<span class="ot">smellsBadF ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-smellsBadF who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
-
-<span class="ot">maybeJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesF <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quot;James&quot;</span>
-
-<span class="ot">maybeJohnF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJohnF <span class="fu">=</span> <span class="dt">Nothing</span>
-
-<span class="ot">maybeStinkyJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeStinkyJamesF <span class="fu">=</span> mapF smellsBadF maybeJamesF
-<span class="co">-- &gt; maybeStinkyJamesF </span>
-<span class="co">--   Just &quot;James smells awful&quot;</span>
-
-<span class="ot">maybeStinkyJohnF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeStinkyJohnF <span class="fu">=</span> mapF smellsBadF maybeJohnF
-<span class="co">-- &gt; maybeStinkyJohnF</span>
-<span class="co">--   Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mapF <span class="ot">=</span> (<span class="op">&lt;$&gt;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ot">smellsBadF ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>smellsBadF who <span class="ot">=</span> who <span class="op">++</span> <span class="st">&quot; smells awful&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>maybeJamesF <span class="ot">=</span> <span class="dt">Just</span> <span class="st">&quot;James&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJohnF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>maybeJohnF <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeStinkyJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>maybeStinkyJamesF <span class="ot">=</span> mapF smellsBadF maybeJamesF</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeStinkyJamesF </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James smells awful&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeStinkyJohnF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>maybeStinkyJohnF <span class="ot">=</span> mapF smellsBadF maybeJohnF</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeStinkyJohnF</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">--   Nothing</span></span></code></pre></div>
 <p>You may have used this even if you have never seen a ‘functional language’ before. It is exactly the same as the map function several languages use over a linked list. If you think of it, it makes sense that linked lists also implements the Functor typeclass. After all it is also a container that includes data, but whose data is also not easily accessible. For example, even if we assume the head of the list is all the so contained data, we can’t even be sure that the list we are getting has a head, or instead is an empty list</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">mapF <span class="fu">=</span> (<span class="fu">&lt;$&gt;</span>)
-
-<span class="ot">smellsBadF ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-smellsBadF who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
-
-<span class="ot">peopleF ::</span> [<span class="dt">String</span>]
-peopleF <span class="fu">=</span> [<span class="st">&quot;Fred&quot;</span>, <span class="st">&quot;Sandra&quot;</span>, <span class="st">&quot;Bill&quot;</span>]
-
-<span class="ot">ghostsF ::</span> [<span class="dt">String</span>]
-ghostsF <span class="fu">=</span> []
-
-<span class="ot">stinkyPeopleF ::</span> [<span class="dt">String</span>]
-stinkyPeopleF <span class="fu">=</span> mapF smellsBadF peopleF
-<span class="co">-- &gt; stinkyPeopleF</span>
-<span class="co">--   [&quot;Fred smells awful&quot;, &quot;Sandra smells awful&quot;, &quot;Bill smells awful&quot;]</span>
-
-<span class="ot">stinkyGhostsF ::</span> [<span class="dt">String</span>]
-stinkyGhostsF <span class="fu">=</span> mapF smellsBadF ghostsF
-<span class="co">-- &gt; stinkyGhostsF</span>
-<span class="co">--   []</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mapF <span class="ot">=</span> (<span class="op">&lt;$&gt;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ot">smellsBadF ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>smellsBadF who <span class="ot">=</span> who <span class="op">++</span> <span class="st">&quot; smells awful&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ot">peopleF ::</span> [<span class="dt">String</span>]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>peopleF <span class="ot">=</span> [<span class="st">&quot;Fred&quot;</span>, <span class="st">&quot;Sandra&quot;</span>, <span class="st">&quot;Bill&quot;</span>]</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ot">ghostsF ::</span> [<span class="dt">String</span>]</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>ghostsF <span class="ot">=</span> []</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="ot">stinkyPeopleF ::</span> [<span class="dt">String</span>]</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>stinkyPeopleF <span class="ot">=</span> mapF smellsBadF peopleF</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; stinkyPeopleF</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">--   [&quot;Fred smells awful&quot;, &quot;Sandra smells awful&quot;, &quot;Bill smells awful&quot;]</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="ot">stinkyGhostsF ::</span> [<span class="dt">String</span>]</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>stinkyGhostsF <span class="ot">=</span> mapF smellsBadF ghostsF</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; stinkyGhostsF</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">--   []</span></span></code></pre></div>
 <p>Above using the Functor typeclass, we have discovered that even though it has a scary name, it’s bark is certainly bigger than it’s bite. We shall find below that learning the Functor typeclass was not a singular exception, but rather a general rule.</p>
 <p>The next typeclass we shall tackle is the Applicative typeclass. Again any datatypes that implement the Applicative typeclass usually contains enclosed data that is hard to easily access. Another thing to keep in mind, is that any datatype that implements the Applicative typeclass also implements the Functor typeclass. The two functions that are required to implement the Applicative typeclass are</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">pure<span class="ot"> ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> f a
-
-<span class="co">--and</span>
-
-<span class="ot">(&lt;*&gt;) ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> f (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</code></pre></div>
-<p>Again this looks more complicated then it really is, but that’s just because it is using symbols and is generic across all datatypes that implement the Applicative typeclass. If we specify to <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and change the function names, it quickly becomes much easier to reason about.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">wrap ::</span> a <span class="ot">-&gt;</span> <span class="dt">Mabye</span> a
-
-<span class="ot">apply ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pure</span><span class="ot"> ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> f a</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">--and</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ot">(&lt;*&gt;) ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> f (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</span></code></pre></div>
+<p>Again this looks more complicated then it really is, but that’s just because it is using symbols and is generic across all datatypes that implement the Applicative typeclass. If we specify to <code class="sourceCode haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and change the function names, it quickly becomes much easier to reason about.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">wrap ::</span> a <span class="ot">-&gt;</span> <span class="dt">Mabye</span> a</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ot">apply ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</span></code></pre></div>
 <p>For the wrap function there is really almost nothing to it. It takes a value and encloses it in the datatype that implements the Applicative typeclass. For example looking back at our maybeJames function from above we can change it just so</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapA <span class="fu">=</span> pure
-
-<span class="co">-- the orginal function</span>
-<span class="ot">maybeJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesF <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quot;James&quot;</span>
-<span class="co">-- &gt; maybeJamesF</span>
-<span class="co">--   Just &quot;James&quot;</span>
-
-<span class="co">-- and now using the Applicative typeclass</span>
-<span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesA <span class="fu">=</span> wrapA <span class="st">&quot;James&quot;</span>
-<span class="co">-- &gt; maybeJamesF</span>
-<span class="co">--   Just &quot;James&quot;</span>
-<span class="co">-- &gt; maybeJamesA == maybeJamesF</span>
-<span class="co">--   True</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>wrapA <span class="ot">=</span> <span class="fu">pure</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- the orginal function</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesF ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>maybeJamesF <span class="ot">=</span> <span class="dt">Just</span> <span class="st">&quot;James&quot;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesF</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James&quot;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- and now using the Applicative typeclass</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>maybeJamesA <span class="ot">=</span> wrapA <span class="st">&quot;James&quot;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesF</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James&quot;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesA == maybeJamesF</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">--   True</span></span></code></pre></div>
 <p>The apply function is equally easy to wrap your mind around. It is also much more powerful than the mapping function from before, because whereas the map function can only apply a function to operate on the datatype’s inner value, the apply function (paired with the wrap function) can not only be used the same way, but can also be used to compose multiple wrapped values together. To see this in action we will first take the example that we worked on with the Functor typeclass and use functions from the Applicative typeclass instead.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapA <span class="fu">=</span> pure
-applyA <span class="fu">=</span> (<span class="fu">&lt;*&gt;</span>)
-
-<span class="ot">smellsBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-smellsBadA who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
-
-<span class="ot">maybeSmellsBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
-maybeSmellsBadA <span class="fu">=</span> wrapA smellsBadA
-
-<span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesA <span class="fu">=</span> wrapA <span class="st">&quot;James&quot;</span>
-
-<span class="ot">maybeJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJohnA <span class="fu">=</span> <span class="dt">Nothing</span>
-
-<span class="ot">maybeStinkyJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeStinkyJamesA <span class="fu">=</span> applyA maybeSmellsBadA maybeJamesA
-<span class="co">-- &gt; maybeStinkyJamesA</span>
-<span class="co">--   Just &quot;James smells awful&quot;</span>
-
-<span class="ot">maybeStinkyJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeStinkyJohnA <span class="fu">=</span> applyA maybeSmellsBadA maybeJohnA
-<span class="co">-- &gt; maybeStinkyJohnA</span>
-<span class="co">--   Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wrapA <span class="ot">=</span> <span class="fu">pure</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>applyA <span class="ot">=</span> (<span class="op">&lt;*&gt;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ot">smellsBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>smellsBadA who <span class="ot">=</span> who <span class="op">++</span> <span class="st">&quot; smells awful&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeSmellsBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>maybeSmellsBadA <span class="ot">=</span> wrapA smellsBadA</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>maybeJamesA <span class="ot">=</span> wrapA <span class="st">&quot;James&quot;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>maybeJohnA <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeStinkyJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>maybeStinkyJamesA <span class="ot">=</span> applyA maybeSmellsBadA maybeJamesA</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeStinkyJamesA</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James smells awful&quot;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeStinkyJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>maybeStinkyJohnA <span class="ot">=</span> applyA maybeSmellsBadA maybeJohnA</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeStinkyJohnA</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co">--   Nothing</span></span></code></pre></div>
 <p>And then we will spice it up a little by still using some of the function from above, but now also using the apply function to compose two Maybe values.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapA <span class="fu">=</span> pure
-applyA <span class="fu">=</span> (<span class="fu">&lt;*&gt;</span>)
-
-<span class="ot">smellsBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-smellsBadA who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
-
-<span class="ot">maybeFredA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeFredA <span class="fu">=</span> wrapA <span class="st">&quot;Fred&quot;</span>
-
-<span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesA <span class="fu">=</span> wrapA <span class="st">&quot;James&quot;</span>
-
-<span class="ot">maybeJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJohnA <span class="fu">=</span> <span class="dt">Nothing</span>
-
-<span class="ot">bothSmellBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-bothSmellBadA who1 who2 <span class="fu">=</span> 
-  (smellsBadA who1) <span class="fu">++</span> <span class="st">&quot;, but &quot;</span> <span class="fu">++</span> (smellsBadA who2) <span class="fu">++</span> <span class="st">&quot; too!&quot;</span>
-
-<span class="ot">maybeBothSmellBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
-maybeBothSmellBadA <span class="fu">=</span> wrapA bothSmellBadA
-
-<span class="ot">maybeJamesFredBothSmellA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesFredBothSmellA <span class="fu">=</span> applyA (applyA maybeBothSmellBadA maybeJamesA) maybeFredA
-<span class="co">-- &gt; maybeJamesFredBothSmellA</span>
-<span class="co">--   Just &quot;James smells awful, but Fred smells awful too!&quot;</span>
-
-<span class="ot">maybeJamesJohnBothSmellA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesJohnBothSmellA <span class="fu">=</span> applyA (applyA maybeBothSmellBadA maybeJamesA) maybeJohnA
-<span class="co">-- &gt; maybeJamesJohnBothSmellA</span>
-<span class="co">--   Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>wrapA <span class="ot">=</span> <span class="fu">pure</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>applyA <span class="ot">=</span> (<span class="op">&lt;*&gt;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ot">smellsBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>smellsBadA who <span class="ot">=</span> who <span class="op">++</span> <span class="st">&quot; smells awful&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeFredA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>maybeFredA <span class="ot">=</span> wrapA <span class="st">&quot;Fred&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>maybeJamesA <span class="ot">=</span> wrapA <span class="st">&quot;James&quot;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJohnA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>maybeJohnA <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="ot">bothSmellBadA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>bothSmellBadA who1 who2 <span class="ot">=</span> </span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  (smellsBadA who1) <span class="op">++</span> <span class="st">&quot;, but &quot;</span> <span class="op">++</span> (smellsBadA who2) <span class="op">++</span> <span class="st">&quot; too!&quot;</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeBothSmellBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>maybeBothSmellBadA <span class="ot">=</span> wrapA bothSmellBadA</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesFredBothSmellA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>maybeJamesFredBothSmellA <span class="ot">=</span> applyA (applyA maybeBothSmellBadA maybeJamesA) maybeFredA</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesFredBothSmellA</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James smells awful, but Fred smells awful too!&quot;</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesJohnBothSmellA ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>maybeJamesJohnBothSmellA <span class="ot">=</span> applyA (applyA maybeBothSmellBadA maybeJamesA) maybeJohnA</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesJohnBothSmellA</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="co">--   Nothing</span></span></code></pre></div>
 <p>How come we can apply only one wrapped function to two different wrapped values? The key here is that Haskell uses currying, so a function that takes two arguments, is in fact the same as a function that takes one argument and returns as a a value another function that also takes a value and then that finally returns the actual result. To see it in types</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">maybeBothSmellBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>))
-<span class="co">-- this is the same as Maybe (String -&gt; String -&gt; String) but the parens are</span>
-<span class="co">-- added to increase understanding</span>
-
-<span class="ot">applyA1st ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
-applyA1st <span class="fu">=</span> applyA
-
-<span class="ot">maybeJamesFredBothSmellA1st ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
-maybeJamesFredBothSmellA1st <span class="fu">=</span> apply1st maybeBothSmellBadA maybeJamesA
-
-<span class="ot">applyA2cnd ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-applyA2cnd <span class="fu">=</span> applyA
-
-<span class="ot">maybeJamesFredBothSmellA2cnd ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesFredBothSmellA2cnd <span class="fu">=</span> apply2cnd maybeJamesFredBothSmell1st maybeFredA</code></pre></div>
-<p>Another way to see the power of Applicative’s apply function is to use <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Control.Monad.Writer</span></code>. It is a datatype that allows us to have a value that comes with an accompanying log. When the writer’s are composed, the logs are composed (by appending) for free too.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad.Writer</span>
-
-applyA <span class="fu">=</span> (<span class="fu">&lt;*&gt;</span>)
-wrapA <span class="fu">=</span> pure
-
-<span class="ot">jamesWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span>
-jamesWriterA <span class="fu">=</span> writer (<span class="st">&quot;James&quot;</span>, [<span class="st">&quot;Creating Person: James&quot;</span>])
-
-<span class="ot">fredWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span>
-fredWriterA <span class="fu">=</span> writer (<span class="st">&quot;Fred&quot;</span>, [<span class="st">&quot;Creating Person: Fred&quot;</span>])
-
-<span class="ot">theyHateA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-theyHateA person1 person2 <span class="fu">=</span> person1 <span class="fu">++</span> <span class="st">&quot; hates &quot;</span> <span class="fu">++</span> person2
-
-<span class="ot">theyHateWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)
-theyHateWriterA <span class="fu">=</span> wrapA theyHateA
-
-<span class="ot">jamesHatesFredWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span>
-jamesHatesFredWriterA <span class="fu">=</span> applyA (applyA theyHateWriterA jamesWriterA) fredWriterA
-<span class="co">-- &gt; runWriter jamesHatesFredWriterA</span>
-<span class="co">--   (&quot;James hates Fred&quot;,[&quot;Creating Person: James&quot;,&quot;Creating Person: Fred&quot;])</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeBothSmellBadA ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- this is the same as Maybe (String -&gt; String -&gt; String) but the parens are</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- added to increase understanding</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ot">applyA1st ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>applyA1st <span class="ot">=</span> applyA</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesFredBothSmellA1st ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>maybeJamesFredBothSmellA1st <span class="ot">=</span> apply1st maybeBothSmellBadA maybeJamesA</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="ot">applyA2cnd ::</span> <span class="dt">Maybe</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>applyA2cnd <span class="ot">=</span> applyA</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesFredBothSmellA2cnd ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>maybeJamesFredBothSmellA2cnd <span class="ot">=</span> apply2cnd maybeJamesFredBothSmell1st maybeFredA</span></code></pre></div>
+<p>Another way to see the power of Applicative’s apply function is to use <code class="sourceCode haskell"><span class="dt">Control.Monad.Writer</span></code>. It is a datatype that allows us to have a value that comes with an accompanying log. When the writer’s are composed, the logs are composed (by appending) for free too.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.Writer</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>applyA <span class="ot">=</span> (<span class="op">&lt;*&gt;</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>wrapA <span class="ot">=</span> <span class="fu">pure</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ot">jamesWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>jamesWriterA <span class="ot">=</span> writer (<span class="st">&quot;James&quot;</span>, [<span class="st">&quot;Creating Person: James&quot;</span>])</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="ot">fredWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>fredWriterA <span class="ot">=</span> writer (<span class="st">&quot;Fred&quot;</span>, [<span class="st">&quot;Creating Person: Fred&quot;</span>])</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="ot">theyHateA ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>theyHateA person1 person2 <span class="ot">=</span> person1 <span class="op">++</span> <span class="st">&quot; hates &quot;</span> <span class="op">++</span> person2</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="ot">theyHateWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>theyHateWriterA <span class="ot">=</span> wrapA theyHateA</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="ot">jamesHatesFredWriterA ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">String</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>jamesHatesFredWriterA <span class="ot">=</span> applyA (applyA theyHateWriterA jamesWriterA) fredWriterA</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; runWriter jamesHatesFredWriterA</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co">--   (&quot;James hates Fred&quot;,[&quot;Creating Person: James&quot;,&quot;Creating Person: Fred&quot;])</span></span></code></pre></div>
 <p>And that’s already most of it. The final typeclass we want to talk about is the “dreaded” Monad. But just as the Applicative and Functor typeclasses are not that hard, the Monad typeclass is not substantively harder to understand than they were either. Just like all datatypes that implement the Applicative typeclass also implement the Functor typeclass, so all datatypes that implement the Monad typeclass also implement the Applicative typeclass (and therefore the Functor typeclass too).</p>
-<p>There is only one<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> new function that needs to be declared to implement the Monad typeclass.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">(=&lt;&lt;) ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m a <span class="ot">-&gt;</span> m b</code></pre></div>
-<p>Again, scarier than it actually is, since it’s all symbols, and is generic for any Monad. Desymbolizing it, specifying it for <code class="sourceCode haskell" rundoc-language="haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and giving it a pronounceable name gives us</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">bind ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b) <span class="ot">-&gt;</span> <span class="dt">Mabye</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</code></pre></div>
+<p>There is only one<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> new function that needs to be declared to implement the Monad typeclass.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">(=&lt;&lt;) ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m a <span class="ot">-&gt;</span> m b</span></code></pre></div>
+<p>Again, scarier than it actually is, since it’s all symbols, and is generic for any Monad. Desymbolizing it, specifying it for <code class="sourceCode haskell"><span class="dt">Maybe</span> <span class="dt">String</span></code> and giving it a pronounceable name gives us</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">bind ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b) <span class="ot">-&gt;</span> <span class="dt">Mabye</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b</span></code></pre></div>
 <p>Re-implementing what we just did with Functor and then Applicative in Monad is not too hard to manage.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">wrapM <span class="fu">=</span> return 
-<span class="co">-- pure in the Applicative typeclass is called return, groovy right?</span>
-bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
-
-<span class="ot">smellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-smellsBadM who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
-
-<span class="co">--instead of wrapping the whole function like with the applicative version we </span>
-<span class="co">--path the argument through and then wrap the result</span>
-<span class="ot">maybeSmellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeSmellsBadM who <span class="fu">=</span> wrapM (smellsBadM who)
-
-<span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesM <span class="fu">=</span> wrapM <span class="st">&quot;James&quot;</span>
-
-<span class="ot">maybeJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJohnM <span class="fu">=</span> <span class="dt">Nothing</span>
-
-<span class="ot">maybeStinkyJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeStinkyJamesM <span class="fu">=</span> bindM maybeSmellsBadM maybeJamesM
-<span class="co">-- &gt; maybeStinkyJamesM</span>
-<span class="co">--   Just &quot;James smells awful&quot;</span>
-
-<span class="ot">maybeStinkyJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeStinkyJohnM <span class="fu">=</span> bindM maybeSmellsBadM maybeJohnM
-<span class="co">-- &gt; maybeStinkyJohnM</span>
-<span class="co">--   Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>wrapM <span class="ot">=</span> <span class="fu">return</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- pure in the Applicative typeclass is called return, groovy right?</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>bindM <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ot">smellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>smellsBadM who <span class="ot">=</span> who <span class="op">++</span> <span class="st">&quot; smells awful&quot;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">--instead of wrapping the whole function like with the applicative version we </span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">--path the argument through and then wrap the result</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeSmellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>maybeSmellsBadM who <span class="ot">=</span> wrapM (smellsBadM who)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>maybeJamesM <span class="ot">=</span> wrapM <span class="st">&quot;James&quot;</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>maybeJohnM <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeStinkyJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>maybeStinkyJamesM <span class="ot">=</span> bindM maybeSmellsBadM maybeJamesM</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeStinkyJamesM</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James smells awful&quot;</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeStinkyJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>maybeStinkyJohnM <span class="ot">=</span> bindM maybeSmellsBadM maybeJohnM</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeStinkyJohnM</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="co">--   Nothing</span></span></code></pre></div>
 <p>With a little bit of work we can get our composing values example from earlier working with the functions available from the Monad typeclass too</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
-wrapM <span class="fu">=</span> return
-
-<span class="ot">smellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-smellsBadM who <span class="fu">=</span> who <span class="fu">++</span> <span class="st">&quot; smells awful&quot;</span>
-
-<span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesM <span class="fu">=</span> wrapM <span class="st">&quot;James&quot;</span>
-
-<span class="ot">maybeFredM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeFredM <span class="fu">=</span> wrapM <span class="st">&quot;Fred&quot;</span>
-
-<span class="ot">maybeJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJohnM <span class="fu">=</span> <span class="dt">Nothing</span>
-
-<span class="ot">maybeBothSmellBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeBothSmellBadM who1 who2 <span class="fu">=</span> 
-  wrapM ((smellsBadM who1) <span class="fu">++</span> <span class="st">&quot;, but &quot;</span> <span class="fu">++</span> (smellsBadM who2) <span class="fu">++</span> <span class="st">&quot; too!&quot;</span>)
-
-<span class="ot">maybeBothSmellBadM2 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeBothSmellBadM2 who2 who1 <span class="fu">=</span> bindM (maybeBothSmellBadM who1) who2
-
-<span class="ot">maybeJamesFredBothSmellM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesFredBothSmellM <span class="fu">=</span> bindM (maybeBothSmellBadM2 maybeJamesM) maybeFredM
-<span class="co">-- &gt; maybeJamesFredBothSmellM</span>
-<span class="co">--   Just &quot;Fred smells awful, but James smells awful too!&quot;</span>
-
-<span class="ot">maybeJamesJohnBothSmellM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesJohnBothSmellM <span class="fu">=</span> bindM (maybeBothSmellBadM2 maybeJamesM) maybeJohnM
-<span class="co">-- &gt; maybeJamesJohnBothSmellM</span>
-<span class="co">--   Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>bindM <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>wrapM <span class="ot">=</span> <span class="fu">return</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ot">smellsBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>smellsBadM who <span class="ot">=</span> who <span class="op">++</span> <span class="st">&quot; smells awful&quot;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>maybeJamesM <span class="ot">=</span> wrapM <span class="st">&quot;James&quot;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeFredM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>maybeFredM <span class="ot">=</span> wrapM <span class="st">&quot;Fred&quot;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJohnM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>maybeJohnM <span class="ot">=</span> <span class="dt">Nothing</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeBothSmellBadM ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>maybeBothSmellBadM who1 who2 <span class="ot">=</span> </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  wrapM ((smellsBadM who1) <span class="op">++</span> <span class="st">&quot;, but &quot;</span> <span class="op">++</span> (smellsBadM who2) <span class="op">++</span> <span class="st">&quot; too!&quot;</span>)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeBothSmellBadM2 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>maybeBothSmellBadM2 who2 who1 <span class="ot">=</span> bindM (maybeBothSmellBadM who1) who2</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesFredBothSmellM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>maybeJamesFredBothSmellM <span class="ot">=</span> bindM (maybeBothSmellBadM2 maybeJamesM) maybeFredM</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesFredBothSmellM</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;Fred smells awful, but James smells awful too!&quot;</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesJohnBothSmellM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>maybeJamesJohnBothSmellM <span class="ot">=</span> bindM (maybeBothSmellBadM2 maybeJamesM) maybeJohnM</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; maybeJamesJohnBothSmellM</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="co">--   Nothing</span></span></code></pre></div>
 <p>Notice that in this example the ordering is opposite from what we found from using Applicative’s apply. With apply we have two Maybe values, one of which is a function, and compose them together going left to right. With Monad’s bind, this is no longer the case, but rather we have a function that takes the unwrapped value from the second Maybe value and returns another Maybe value from it, therefore making the order right to left.</p>
 <p>With the move from the Functor typeclass to the Applicative typeclass we moved from being able to modify the value wrapped inside the datatype that implements the Functor typeclass to the ability to compose different separately wrapped elements in a datatype that implements the Applicative typeclasss together, so when we make the jump from Applicative to Monad, what new ability do we get? From comparing the types between bind and apply we can see that for the first time we no longer have our functions resulting value prewrapped for us. This comes in useful if the function we want to apply to the unwrapped value, itself already produces a wrapped value. If we had that scenario with only an Applicative we would have no way to avoid nesting. In fact one cool benefit of Monad’s bind is that if we are given an already nested structure (for example if apply was used when bind should have been used), we can flatten it by just using the bind and identity functions.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
-wrapM <span class="fu">=</span> return
-
-<span class="ot">identityM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-identityM value <span class="fu">=</span> value
-
-<span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-maybeJamesM <span class="fu">=</span> wrapM <span class="st">&quot;James&quot;</span>
-
-<span class="ot">nestedMaybeJamesM ::</span> <span class="dt">Maybe</span> (<span class="dt">Maybe</span> <span class="dt">String</span>)
-nestedMaybeJamesM <span class="fu">=</span> wrapM maybeJamesM
-
-<span class="ot">unNestedMaybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-unNestedMaybeJamesM <span class="fu">=</span> bindM identityM nestedMaybeJamesM
-<span class="co">-- &gt; unNestedMaybeJamesM</span>
-<span class="co">--   Just &quot;James&quot;</span>
-<span class="co">-- &gt; unNestedMaybeJamesM == maybeJamesM</span>
-<span class="co">--   True</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>bindM <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>wrapM <span class="ot">=</span> <span class="fu">return</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="ot">identityM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>identityM value <span class="ot">=</span> value</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="ot">maybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>maybeJamesM <span class="ot">=</span> wrapM <span class="st">&quot;James&quot;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="ot">nestedMaybeJamesM ::</span> <span class="dt">Maybe</span> (<span class="dt">Maybe</span> <span class="dt">String</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>nestedMaybeJamesM <span class="ot">=</span> wrapM maybeJamesM</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="ot">unNestedMaybeJamesM ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>unNestedMaybeJamesM <span class="ot">=</span> bindM identityM nestedMaybeJamesM</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; unNestedMaybeJamesM</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co">--   Just &quot;James&quot;</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; unNestedMaybeJamesM == maybeJamesM</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co">--   True</span></span></code></pre></div>
 <p>A practical use of this again shows up when using linked lists, bind even appears for this purpose in some other languages under the guise of flatMap, a function identical to bind specified to Lists. For example suppose I wanted to map a function over a list of values, but instead of just returning one value for each, I want to return several. One option to take care of this problem is to return a lists of lists, but this quickly becomes cumbersome when going several levels deep. Instead I can use Monad’s bind to accumulate all the results in one (non-nested) list. Here we use bind to generate <a href="https://en.wikipedia.org/wiki/Backronym">backronyms</a></p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.List</span>
-<span class="kw">import </span><span class="dt">Data.Char</span>
-
-bindM <span class="fu">=</span> (<span class="fu">=&lt;&lt;</span>)
-
-<span class="co">-- Using a List for convenience for my (very short) word dictonary </span>
-<span class="ot">wordDictonaryM ::</span> [<span class="dt">String</span>]
-wordDictonaryM <span class="fu">=</span> [<span class="st">&quot;Resistance&quot;</span>, <span class="st">&quot;External&quot;</span>, <span class="st">&quot;Frog-legs&quot;</span>, <span class="st">&quot;Combined&quot;</span>, <span class="st">&quot;Load-&quot;</span>, 
-                 <span class="st">&quot;Understated&quot;</span>, <span class="st">&quot;Bearing&quot;</span>, <span class="st">&quot;Operational&quot;</span>, <span class="st">&quot;Treadmill&quot;</span>]
-
-<span class="co">-- String is just a List of Char [Char]</span>
-<span class="ot">backronymM ::</span> <span class="dt">String</span>
-<span class="co">-- Stephen </span>
-backronymM <span class="fu">=</span> <span class="st">&quot;Colbert&quot;</span>
-
-<span class="ot">findWordM ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
-<span class="co">-- Don't let the anonymous function scare you. They are functions that don't have</span>
-<span class="co">-- any name -- which makes them useful when they are short, and you only need to </span>
-<span class="co">-- use them once. In this case this anonymous function only has one argument &quot;x&quot;</span>
-findWordM c <span class="fu">=</span> <span class="kw">case</span> find (\x <span class="ot">-&gt;</span> head x <span class="fu">==</span> toUpper c) wordDictonaryM <span class="kw">of</span>
-               <span class="dt">Just</span> x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot; &quot;</span>
-               <span class="dt">Nothing</span> <span class="ot">-&gt;</span> c <span class="fu">:</span> <span class="st">&quot; &quot;</span>
-
-<span class="ot">aTreadmillM ::</span> <span class="dt">String</span>
-aTreadmillM <span class="fu">=</span> bindM findWordM backronymM
-<span class="co">-- &gt; aTreadmillM</span>
-<span class="co">-- &quot;Combined Operational Load- Bearing External Resistance Treadmill &quot;</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Char</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>bindM <span class="ot">=</span> (<span class="op">=&lt;&lt;</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- Using a List for convenience for my (very short) word dictonary </span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ot">wordDictonaryM ::</span> [<span class="dt">String</span>]</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>wordDictonaryM <span class="ot">=</span> [<span class="st">&quot;Resistance&quot;</span>, <span class="st">&quot;External&quot;</span>, <span class="st">&quot;Frog-legs&quot;</span>, <span class="st">&quot;Combined&quot;</span>, <span class="st">&quot;Load-&quot;</span>, </span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>                 <span class="st">&quot;Understated&quot;</span>, <span class="st">&quot;Bearing&quot;</span>, <span class="st">&quot;Operational&quot;</span>, <span class="st">&quot;Treadmill&quot;</span>]</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- String is just a List of Char [Char]</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="ot">backronymM ::</span> <span class="dt">String</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co">-- Stephen </span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>backronymM <span class="ot">=</span> <span class="st">&quot;Colbert&quot;</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="ot">findWordM ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- Don't let the anonymous function scare you. They are functions that don't have</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- any name -- which makes them useful when they are short, and you only need to </span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- use them once. In this case this anonymous function only has one argument &quot;x&quot;</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>findWordM c <span class="ot">=</span> <span class="kw">case</span> find (\x <span class="ot">-&gt;</span> <span class="fu">head</span> x <span class="op">==</span> <span class="fu">toUpper</span> c) wordDictonaryM <span class="kw">of</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>               <span class="dt">Just</span> x <span class="ot">-&gt;</span> x <span class="op">++</span> <span class="st">&quot; &quot;</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>               <span class="dt">Nothing</span> <span class="ot">-&gt;</span> c <span class="op">:</span> <span class="st">&quot; &quot;</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="ot">aTreadmillM ::</span> <span class="dt">String</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>aTreadmillM <span class="ot">=</span> bindM findWordM backronymM</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="co">-- &gt; aTreadmillM</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a><span class="co">-- &quot;Combined Operational Load- Bearing External Resistance Treadmill &quot;</span></span></code></pre></div>
 <p>And that’s really all there is too these scary typeclasses. Just like in Java where you have some Objects where it’s not possible to directly change the inner state, in Haskell you have some datatypes that also don’t allow directly changing their inner variable(s). Just like in Java where if we know what class the Object inherits from we can use certain generic functions on them, in Haskell we have typeclasses, and if a datatype implements a certain typeclass, we can be sure there will be certain functions that will work on it.</p>
-<div class="footnotes">
+<aside id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1"><p>Two functions, but only one new one. The other one (return) is simply an alias to our previously mentioned wrap (aka pure)<a href="#fnref1">↩</a></p></li>
+<li id="fn1"><p>Two functions, but only one new one. The other one (return) is simply an alias to our previously mentioned wrap (aka pure)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-</div>
+</aside>
 
 
 <div class="comments">
